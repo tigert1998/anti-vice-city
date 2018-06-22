@@ -16,32 +16,25 @@ using namespace glm;
 
 int width = 800, height = 600;
 
-bool pressed = false;
-
 Camera camera(vec3(0, 0, 3), 0, 0);
 mat4 model_matrix, projection_matrix;
 
 void CursorPosCallback(GLFWwindow *window, double x, double y) {
 	static double mouse_x, mouse_y;
+	static bool entered = false;
 	double new_x = x / width - 0.5;
 	double new_y = y / height - 0.5;
-	static double theta = 0, gamma = 0;	
-	if (pressed) 
-		camera.Rotate(new_x - mouse_x, new_y - mouse_y);
+	if (entered)	
+		camera.Rotate(mouse_x - new_x, mouse_y - new_y);
 	mouse_x = new_x;
 	mouse_y = new_y;
-}
-
-void MouseButtonCallback(GLFWwindow *window, int button, int action, int mods) {
-	if (button != GLFW_MOUSE_BUTTON_LEFT) return;
-	pressed = action == GLFW_PRESS;
+	entered = true;
 }
 
 void ScrollCallback(GLFWwindow *window, double xoffset, double yoffset) {
 	float mul = pow(1.1, yoffset);
 	model_matrix = scale(model_matrix, vec3(mul, mul, mul));
 }
-
 
 void FramebufferSizeCallback(GLFWwindow *window, int width, int height) {
 	glViewport(0, 0, width, height);
@@ -53,6 +46,23 @@ mat4 GetProjectionMatrix() {
 	return perspective(radians(45.0f), 1.0f * width / height, 0.1f, 1000.0f);
 }
 
+void ProcessInput(GLFWwindow *window) {
+	static float current_time, last_time;
+	current_time = glfwGetTime();
+	float delta_time = current_time - last_time;
+	last_time = current_time;
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, true);
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+       	camera.Move(MoveDirectionType::FRONT, delta_time);
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+       	camera.Move(MoveDirectionType::BACK, delta_time);
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+       	camera.Move(MoveDirectionType::LEFT, delta_time);
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+       	camera.Move(MoveDirectionType::RIGHT, delta_time);
+}
+
 int main() {
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -62,21 +72,21 @@ int main() {
 	GLFWwindow* window = glfwCreateWindow(width, height, "Batmobile", nullptr, nullptr);
 	glfwMakeContextCurrent(window);
 	glfwSetCursorPosCallback(window, CursorPosCallback);
-	glfwSetMouseButtonCallback(window, MouseButtonCallback);
 	glfwSetScrollCallback(window, ScrollCallback);
 	glfwSetFramebufferSizeCallback(window, FramebufferSizeCallback);
 
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
 	glEnable(GL_DEPTH_TEST);
 
-	Model model("resources/models/city", "Nimbasa City.obj");
-	Shader shader("shaders/batmobile.vs", "shaders/batmobile.fs");
+	Model model("resources/models/city", "city.obj");
+	Shader shader("shaders/city.vs", "shaders/city.fs");
 
 	auto rotate_matrix = glm::rotate(mat4(1), 0.5f, vec3(1, 0, 0));
 	model_matrix = scale(rotate(mat4(1), (float)M_PI / 2, vec3(1, 0, 0)), vec3(0.001, 0.001, 0.001));
 
 	while (!glfwWindowShouldClose(window)) {
-		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-			glfwSetWindowShouldClose(window, true);
+		ProcessInput(window);
 
 		glClearColor(0, 0, 0, 0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
