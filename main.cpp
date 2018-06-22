@@ -9,6 +9,8 @@
 #include "model.hpp"
 #include "camera.hpp"
 
+#include "bounding_box.hpp"
+
 using namespace std;
 using namespace glm;
 
@@ -47,7 +49,7 @@ void FramebufferSizeCallback(GLFWwindow *window, int width, int height) {
 	::height = height;  
 }  
 
-mat4 GetPorjectionMatrix() {
+mat4 GetProjectionMatrix() {
 	return perspective(radians(45.0f), 1.0f * width / height, 0.1f, 1000.0f);
 }
 
@@ -82,15 +84,15 @@ int main() {
 		shader.Use();
 		shader.SetUniform<mat4>("model", model_matrix);
 		shader.SetUniform<mat4>("view", camera.GetViewMatrix());
-		shader.SetUniform<mat4>("projection", GetPorjectionMatrix());
+		shader.SetUniform<mat4>("projection", GetProjectionMatrix());
 		
-		shader.SetUniform<vec3>("light.position", vec3(100, 100, 100));
-		shader.SetUniform<vec3>("light.ambient", vec3(0.2, 0.2, 0.2));
-		shader.SetUniform<vec3>("light.diffuse", vec3(0.5, 0.5, 0.5));
+		shader.SetUniform<vec3>("light.position", vec3(200, 200, 500));
+		shader.SetUniform<vec3>("light.ambient", vec3(0.6, 0.6, 0.6));
+		shader.SetUniform<vec3>("light.diffuse", vec3(1, 1, 1));
 		shader.SetUniform<vec3>("light.specular", vec3(1, 1, 1));
 
 		shader.SetUniform<vec3>("view_position", camera.position());
-		shader.SetUniform<float>("material.shininess", 64);
+		shader.SetUniform<float>("material.shininess", 32);
 
 		model.Draw(shader);
 

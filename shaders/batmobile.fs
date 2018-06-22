@@ -19,31 +19,28 @@ uniform Material material;
 uniform Light light;
 uniform vec3 view_position;
 
-out vec4 fragment_color;
-
-in vec3 position;
-in vec3 normal;
-in vec2 tex_coordinate;
+in vec3 Position;
+in vec3 Normal;
+in vec2 TexCoord;
 
 void main() {
-	vec3 view_direction = normalize(view_position - position);
-	vec3 light_direction = normalize(light.position - position);
-	vec3 reflect_direction = normalize(reflect(-light_direction, normal));
+	vec3 view_direction = normalize(view_position - Position);
+	vec3 light_direction = normalize(light.position - Position);
+	vec3 reflect_direction = normalize(reflect(-light_direction, Normal));
 
 	vec3 ambient = 
 		light.ambient *
-		texture(material.texture_diffuse_0, tex_coordinate).rgb;
+		texture(material.texture_diffuse_0, TexCoord).rgb;
 
 	vec3 diffuse =
 		light.diffuse *
-		texture(material.texture_diffuse_0, tex_coordinate).rgb *
-		max(0, dot(light_direction, normal));
+		texture(material.texture_diffuse_0, TexCoord).rgb *
+		max(0.0, dot(light_direction, Normal));
 
 	vec3 specular =
-		light.specular *
-		texture(material.texture_specular_0, tex_coordinate).rgb *
+	    light.specular *
+		texture(material.texture_specular_0, TexCoord).rgb *
 		pow(max(0, dot(reflect_direction, view_direction)), material.shininess);
 
-	fragment_color = vec4(ambient + diffuse + specular, 1);
-	// fragment_color = texture(material.texture_specular_0, tex_coordinate);
+	gl_FragColor = vec4(ambient + diffuse + specular, 1.0f);
 }

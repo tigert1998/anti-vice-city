@@ -26,6 +26,7 @@ public:
 	Mesh() = delete;
 	Mesh(std::vector<Vertex> vertices, std::vector<uint32_t> indices, std::vector<Texture> textures);
 	void Draw(Shader shader) const;
+	const std::vector<Vertex> & GetVertices() const;
 
 private:
 	uint32_t vao, vbo, ebo;
@@ -92,10 +93,15 @@ void Mesh::Draw(Shader shader) const {
 				identifier = "material.texture_ambient_" + to_string(ambient_total++);
 				break;
 		}
-		shader.SetUniform<int32_t>(identifier, i);
+		// shader.SetUniform<int32_t>(identifier, i);
 	}
 
 	glBindVertexArray(vao);
 	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
+}
+
+const std::vector<Vertex> & Mesh::GetVertices() const
+{
+	return this->vertices;
 }
