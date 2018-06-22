@@ -33,7 +33,11 @@ Model::Model(const std::string &path, const std::string &file): path(path) {
 	using namespace Assimp;
 	using namespace std;
 	Importer importer;
-	auto scene = importer.ReadFile(path + "/" + file, aiProcess_Triangulate | aiProcess_FlipUVs);
+	auto scene = importer.ReadFile(path + "/" + file, 
+		aiProcess_Triangulate | 
+		aiProcess_FlipUVs | 
+		aiProcess_CalcTangentSpace
+	);
 	if (scene == nullptr || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || scene->mRootNode == nullptr) {
 		throw AssimpError(importer.GetErrorString());
 	}
@@ -69,6 +73,7 @@ Mesh Model::DealMesh(aiMesh *mesh, const aiScene *scene) {
 			vertex.normal = vec3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);
 		if (mesh->HasTextureCoords(0))
 			vertex.tex_coordinate = vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
+		vertex.tangent = vec3(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z);
 		vertices.push_back(vertex);
 	}
 	for (int i = 0; i < mesh->mNumFaces; i++) {

@@ -1,55 +1,70 @@
 #pragma once
 
+#include <algorithm>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+enum class MoveDirectionType {
+	FRONT, BACK, LEFT, RIGHT
+};
 
 class Camera {
 public:
 	Camera() = delete;
-	Camera(double radius);
-	
-	double radius() const;
+	Camera(glm::vec3 position, double alpha, double beta);
+	void Rotate(double delta_alpha, double delta_beta);
+	void Move(MoveDirectionType, float time);
 	glm::vec3 position() const;
-
-	void Rotate(double delta_alpha, double delta_beta);	
-	void Scroll(double delta_radius);
-
+	glm::mat4 GetViewMatrix() const;
 
 private:
-	double alpha, beta, radius_;
+	const glm::vec3 up_ = glm::vec3(0, 0, 1);
 	glm::vec3 position_;
-
-	void Update();
+	double alpha_, beta_;
+	glm::vec3 front() const;
 
 };
 
-Camera::Camera(double radius) {
-	radius_ = radius;
-	Update();
+Camera::Camera(glm::vec3 position, double alpha, double beta) {
+	position_ = position;
+	alpha_ = alpha;
+	beta_ = beta;
 }
 
 void Camera::Rotate(double delta_alpha, double delta_beta) {
-	alpha += delta_alpha;
-	beta += delta_beta;
-	beta = std::min(static_cast<double>(5 * M_PI / 12), beta);
-	beta = std::max(static_cast<double>(-5 * M_PI / 12), beta);
-	Update();
-}
-
-void Camera::Scroll(double delta_radius) {
-	radius_ += delta_radius;
-	radius_ = std::max(0.1, radius_);
-	Update();
-}
-
-double Camera::radius() const {
-	return radius_;
+	alpha_ += delta_alpha;
+	beta_ += delta_beta;
+	beta_ = std::min(static_cast<double>(5 * M_PI / 12), beta_);
+	beta_ = std::max(static_cast<double>(-5 * M_PI / 12), beta_);
 }
 
 glm::vec3 Camera::position() const {
 	return position_;
 }
 
-void Camera::Update() {
-	using namespace glm;
-	position_ = vec3(radius_ * cos(beta) * cos(alpha), radius_ * cos(beta) * sin(alpha), radius_ * sin(beta));
+glm::vec3 Camera::front() const {
+	return glm::vec3(cos(alpha_) * cos(beta_), sin(alpha_) * cos(beta_), sin(beta_));
+}
+
+void Camera::Move(MoveDirectionType direction, float time) {
+	auto left = glm::cross(up_, front());
+	auto right = -left;
+	switch (direction) {
+		case MoveDirectionType::FRONT:
+			position_ += front() * time;
+			break;
+		case MoveDirectionType::BACK:
+			position_ -= front() * time;
+			break;
+		case MoveDirectionType::LEFT:
+			position_ += left * time;
+			break;
+		case MoveDirectionType::RIGHT:
+			position_ += right * time;
+			break;
+	}
+}
+
+glm::mat4 Camera::GetViewMatrix() const {
+	return glm::lookAt(position_, position_ + front(), up_);
 }

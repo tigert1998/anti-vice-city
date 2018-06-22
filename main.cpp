@@ -3,7 +3,7 @@
 #include <GL/gl.h>
 #include <GL/glext.h>
 #include <GLFW/glfw3.h>
-
+#include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "model.hpp"
@@ -12,30 +12,20 @@
 using namespace std;
 using namespace glm;
 
-const int width = 800, height = 600;
+int width = 800, height = 600;
 
 bool pressed = false;
-vec3 center_position = vec3(0.0f, 0.0f, 0.0f);
 
-Camera camera(3);
-
-mat4 ViewProjection(vec3 camera_position, vec3 center_position) {
-	float aspect = static_cast<float>(width) / height;
-	mat4 projection = perspective(radians(45.0f), aspect, 0.1f, 1000.0f);
-	mat4 view = lookAt(camera_position, center_position, vec3(0, 0, 1));
-	return projection * view;
-}
+Camera camera(vec3(0, 0, 3), 0, 0);
+mat4 model_matrix, projection_matrix;
 
 void CursorPosCallback(GLFWwindow *window, double x, double y) {
 	static double mouse_x, mouse_y;
 	double new_x = x / width - 0.5;
 	double new_y = y / height - 0.5;
-
 	static double theta = 0, gamma = 0;	
-	if (pressed) {
-		camera.Rotate(- new_x + mouse_x, new_y - mouse_y);
-	}
-
+	if (pressed) 
+		camera.Rotate(new_x - mouse_x, new_y - mouse_y);
 	mouse_x = new_x;
 	mouse_y = new_y;
 }
@@ -46,7 +36,19 @@ void MouseButtonCallback(GLFWwindow *window, int button, int action, int mods) {
 }
 
 void ScrollCallback(GLFWwindow *window, double xoffset, double yoffset) {
-	camera.Scroll(-0.2 * yoffset);
+	float mul = pow(1.1, yoffset);
+	model_matrix = scale(model_matrix, vec3(mul, mul, mul));
+}
+
+
+void FramebufferSizeCallback(GLFWwindow *window, int width, int height) {
+	glViewport(0, 0, width, height);
+	::width = width;  
+	::height = height;  
+}  
+
+mat4 GetPorjectionMatrix() {
+	return perspective(radians(45.0f), 1.0f * width / height, 0.1f, 1000.0f);
 }
 
 int main() {
@@ -60,11 +62,15 @@ int main() {
 	glfwSetCursorPosCallback(window, CursorPosCallback);
 	glfwSetMouseButtonCallback(window, MouseButtonCallback);
 	glfwSetScrollCallback(window, ScrollCallback);
+	glfwSetFramebufferSizeCallback(window, FramebufferSizeCallback);
 
 	glEnable(GL_DEPTH_TEST);
 
-	Model model("resources/models/batmobile", "batmobile.fbx");
+	Model model("resources/models/city", "Nimbasa City.obj");
 	Shader shader("shaders/batmobile.vs", "shaders/batmobile.fs");
+
+	auto rotate_matrix = glm::rotate(mat4(1), 0.5f, vec3(1, 0, 0));
+	model_matrix = scale(rotate(mat4(1), (float)M_PI / 2, vec3(1, 0, 0)), vec3(0.001, 0.001, 0.001));
 
 	while (!glfwWindowShouldClose(window)) {
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -74,11 +80,15 @@ int main() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		shader.Use();
-		shader.SetUniform<mat4>("mvp", ViewProjection(camera.position(), center_position));
+		shader.SetUniform<mat4>("model", model_matrix);
+		shader.SetUniform<mat4>("view", camera.GetViewMatrix());
+		shader.SetUniform<mat4>("projection", GetPorjectionMatrix());
+		
 		shader.SetUniform<vec3>("light.position", vec3(100, 100, 100));
 		shader.SetUniform<vec3>("light.ambient", vec3(0.2, 0.2, 0.2));
 		shader.SetUniform<vec3>("light.diffuse", vec3(0.5, 0.5, 0.5));
 		shader.SetUniform<vec3>("light.specular", vec3(1, 1, 1));
+
 		shader.SetUniform<vec3>("view_position", camera.position());
 		shader.SetUniform<float>("material.shininess", 64);
 
