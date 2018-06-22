@@ -80,8 +80,12 @@ Mesh Model::DealMesh(aiMesh *mesh, const aiScene *scene) {
 		aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
 		vector<Texture> diffuse_textures = LoadMaterialTextures(material, aiTextureType_DIFFUSE);
 		vector<Texture> specular_textures = LoadMaterialTextures(material, aiTextureType_SPECULAR);
+		vector<Texture> normals_textures = LoadMaterialTextures(material, aiTextureType_NORMALS);
+		vector<Texture> ambient_textures = LoadMaterialTextures(material, aiTextureType_AMBIENT);
 		copy(diffuse_textures.begin(), diffuse_textures.end(), back_inserter(textures));
 		copy(specular_textures.begin(), specular_textures.end(), back_inserter(textures));
+		copy(normals_textures.begin(), normals_textures.end(), back_inserter(textures));
+		copy(ambient_textures.begin(), ambient_textures.end(), back_inserter(textures));
 	}
 	return Mesh(vertices, indices, textures);
 }
@@ -100,6 +104,12 @@ std::vector<Texture> Model::LoadMaterialTextures(aiMaterial *material, aiTexture
 				break;
 			case aiTextureType_SPECULAR:
 				texture.type = TextureType::SPECULAR;
+				break;
+			case aiTextureType_NORMALS:
+				texture.type = TextureType::NORMALS;
+				break;
+			case aiTextureType_AMBIENT:
+				texture.type = TextureType::AMBIENT;
 				break;
 		}
 		textures.push_back(texture);

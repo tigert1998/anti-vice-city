@@ -6,7 +6,7 @@
 #include "shader.hpp"
 
 enum class TextureType {
-	DIFFUSE, SPECULAR
+	DIFFUSE, SPECULAR, NORMALS, AMBIENT
 };
 
 struct Vertex {
@@ -69,7 +69,7 @@ void Mesh::InitMesh() {
 
 void Mesh::Draw(Shader shader) const {
 	using namespace std;
-	uint32_t diffuse_total = 0, specular_total = 0;
+	uint32_t diffuse_total = 0, specular_total = 0, normals_total = 0, ambient_total;
 	for (int i = 0; i < textures.size(); i++) {
 		glActiveTexture(GL_TEXTURE0 + i);
 		glBindTexture(GL_TEXTURE_2D, textures[i].id);
@@ -80,6 +80,12 @@ void Mesh::Draw(Shader shader) const {
 				break;
 			case TextureType::SPECULAR:
 				identifier = "material.texture_specular_" + to_string(specular_total++);
+				break;
+			case TextureType::NORMALS:
+				identifier = "material.texture_normals_" + to_string(normals_total++);
+				break;
+			case TextureType::AMBIENT:
+				identifier = "material.texture_ambient_" + to_string(ambient_total++);
 				break;
 		}
 		shader.SetUniform<int32_t>(identifier, i);

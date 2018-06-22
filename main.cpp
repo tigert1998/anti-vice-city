@@ -55,7 +55,7 @@ int main() {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWwindow* window = glfwCreateWindow(width, height, "Maya", nullptr, nullptr);
+	GLFWwindow* window = glfwCreateWindow(width, height, "Batmobile", nullptr, nullptr);
 	glfwMakeContextCurrent(window);
 	glfwSetCursorPosCallback(window, CursorPosCallback);
 	glfwSetMouseButtonCallback(window, MouseButtonCallback);
@@ -63,8 +63,8 @@ int main() {
 
 	glEnable(GL_DEPTH_TEST);
 
-	Model model("resources/models/batmobile", "batmobile.obj");
-	Shader shader("shaders/maya.vs", "shaders/maya.fs");
+	Model model("resources/models/batmobile", "batmobile.fbx");
+	Shader shader("shaders/batmobile.vs", "shaders/batmobile.fs");
 
 	while (!glfwWindowShouldClose(window)) {
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -75,7 +75,13 @@ int main() {
 
 		shader.Use();
 		shader.SetUniform<mat4>("mvp", ViewProjection(camera.position(), center_position));
-	
+		shader.SetUniform<vec3>("light.position", vec3(100, 100, 100));
+		shader.SetUniform<vec3>("light.ambient", vec3(0.2, 0.2, 0.2));
+		shader.SetUniform<vec3>("light.diffuse", vec3(0.5, 0.5, 0.5));
+		shader.SetUniform<vec3>("light.specular", vec3(1, 1, 1));
+		shader.SetUniform<vec3>("view_position", camera.position());
+		shader.SetUniform<float>("material.shininess", 64);
+
 		model.Draw(shader);
 
 		glfwSwapBuffers(window);
