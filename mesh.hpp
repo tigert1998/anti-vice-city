@@ -93,7 +93,7 @@ void Mesh::Draw(Shader shader) const {
 				identifier = "material.texture_ambient_" + to_string(ambient_total++);
 				break;
 		}
-		// shader.SetUniform<int32_t>(identifier, i);
+		shader.SetUniform<int32_t>(identifier, i);
 	}
 
 	glBindVertexArray(vao);

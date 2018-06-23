@@ -12,11 +12,13 @@
 #include "mesh.hpp"
 #include "cg_exception.hpp"
 #include "opengl_util.hpp"
+#include "bounding_box.hpp"
 
 class Model {
 private:
 	std::string path;
 	std::vector<Mesh> meshes;
+	std::vector<BoundingBox> boxes;
 
 	void DFSNode(aiNode *, const aiScene *);
 	Mesh DealMesh(aiMesh *, const aiScene *);
@@ -45,14 +47,28 @@ Model::Model(const std::string &path, const std::string &file): path(path) {
 }
 
 void Model::Draw(Shader shader) const {
-	for (const Mesh &i : meshes) 
+	for (const Mesh &i : meshes)
 		i.Draw(shader);
+
+#ifdef DEBUG
+	for (const BoundingBox & box : boxes) {
+		box.Draw();
+	}
+#endif
 }
 
 void Model::DFSNode(aiNode *node, const aiScene *scene) {
 	for (int i = 0; i < node->mNumMeshes; i++) {
 		aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
-		meshes.push_back(DealMesh(mesh, scene));
+		Mesh m = DealMesh(mesh, scene);
+		meshes.push_back(m);
+
+		// bounding box
+		BoundingBox box(m);
+#ifdef DEBUG
+		box.InitDraw();
+#endif
+		boxes.push_back(box);
 	}
 	for (int i = 0; i < node->mNumChildren; i++) {
 		DFSNode(node->mChildren[i], scene);
@@ -115,6 +131,8 @@ std::vector<Texture> Model::LoadMaterialTextures(aiMaterial *material, aiTexture
 				break;
 			case aiTextureType_AMBIENT:
 				texture.type = TextureType::AMBIENT;
+				break;
+			default:
 				break;
 		}
 		textures.push_back(texture);
