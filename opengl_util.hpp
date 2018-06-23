@@ -13,6 +13,21 @@
 #include "stb/stb_image.h"
 #include "cg_exception.hpp"
 
+void FilpImageDataDiagonally(unsigned char *image, int w, int h, int comp) {
+    auto swap_color = [&comp, &w, &image](int x, int y) {
+        for (int i = 0; i < comp; i++) {
+            unsigned char tmp = image[x + i];
+            image[x + i] = image[y + i];
+            image[y + i] = tmp;
+        }
+    };
+
+    for (int i = 0; i < h / 2; i++) {
+        for (int j = 0; j < w; j++)
+            swap_color((i * w + j) * comp, ((h - 1 - i) * w + (w - 1 - j)) * comp);
+    }
+}
+
 uint32_t LoadTexture(std::string url) {
     using namespace std;
     GLuint texture;
@@ -45,7 +60,7 @@ uint32_t LoadTexture(std::string url) {
     return texture;
 }
 
-uint32_t LoadCubeMap(std::vector<std::string> urls) {
+uint32_t LoadCubeMap(const std::vector<std::string> &urls) {
     uint32_t texture;
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_CUBE_MAP, texture);
@@ -54,6 +69,9 @@ uint32_t LoadCubeMap(std::vector<std::string> urls) {
     for (int i = 0; i < urls.size(); i++) {
         auto url = urls[i];
         unsigned char *data = stbi_load(url.c_str(), &width, &height, &channels, 0);
+        if (i == 2 || i == 3) {
+            FilpImageDataDiagonally(data, width, height, channels);
+        }
         if (data) {
             glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
             stbi_image_free(data);

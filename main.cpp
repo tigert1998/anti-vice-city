@@ -8,7 +8,7 @@
 
 #include "model.hpp"
 #include "camera.hpp"
-
+#include "skybox.hpp"
 #include "bounding_box.hpp"
 
 using namespace std;
@@ -79,10 +79,17 @@ int main() {
 
 	glEnable(GL_DEPTH_TEST);
 
-	Model model("resources/models/city", "city.obj");
-	Shader shader("shaders/city.vs", "shaders/city.fs");
+	Model city_model("resources/models/city", "city.obj");
+	Shader city_shader("shaders/city.vs", "shaders/city.fs");
 
-	auto rotate_matrix = glm::rotate(mat4(1), 0.5f, vec3(1, 0, 0));
+	vector<string> urls = {
+		"resources/skybox/left.jpg", "resources/skybox/right.jpg",
+  		"resources/skybox/top.jpg", "resources/skybox/bottom.jpg",
+  		"resources/skybox/front.jpg", "resources/skybox/back.jpg"
+	};
+	Skybox skybox_model(urls);
+	Shader skybox_shader("shaders/skybox.vs", "shaders/skybox.fs");
+
 	model_matrix = scale(rotate(mat4(1), (float)M_PI / 2, vec3(1, 0, 0)), vec3(0.001, 0.001, 0.001));
 
 	while (!glfwWindowShouldClose(window)) {
@@ -91,20 +98,27 @@ int main() {
 		glClearColor(0, 0, 0, 0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		shader.Use();
-		shader.SetUniform<mat4>("model", model_matrix);
-		shader.SetUniform<mat4>("view", camera.GetViewMatrix());
-		shader.SetUniform<mat4>("projection", GetProjectionMatrix());
+		skybox_shader.Use();
+		skybox_shader.SetUniform<mat4>("view", mat4(mat3(camera.GetViewMatrix())));
+		skybox_shader.SetUniform<mat4>("projection", GetProjectionMatrix());
+		skybox_shader.SetUniform<mat4>("rotate", rotate(mat4(1), -(float)M_PI / 2, vec3(1, 0, 0)));
+
+		skybox_model.Draw(skybox_shader);
+
+		city_shader.Use();
+		city_shader.SetUniform<mat4>("model", model_matrix);
+		city_shader.SetUniform<mat4>("view", camera.GetViewMatrix());
+		city_shader.SetUniform<mat4>("projection", GetProjectionMatrix());
 		
-		shader.SetUniform<vec3>("light.position", vec3(200, 200, 500));
-		shader.SetUniform<vec3>("light.ambient", vec3(0.6, 0.6, 0.6));
-		shader.SetUniform<vec3>("light.diffuse", vec3(1, 1, 1));
-		shader.SetUniform<vec3>("light.specular", vec3(1, 1, 1));
+		city_shader.SetUniform<vec3>("light.position", vec3(200, 200, 500));
+		city_shader.SetUniform<vec3>("light.ambient", vec3(0.6, 0.6, 0.6));
+		city_shader.SetUniform<vec3>("light.diffuse", vec3(1, 1, 1));
+		city_shader.SetUniform<vec3>("light.specular", vec3(1, 1, 1));
 
-		shader.SetUniform<vec3>("view_position", camera.position());
-		shader.SetUniform<float>("material.shininess", 32);
+		city_shader.SetUniform<vec3>("view_position", camera.position());
+		city_shader.SetUniform<float>("material.shininess", 32);
 
-		model.Draw(shader);
+		city_model.Draw(city_shader);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
