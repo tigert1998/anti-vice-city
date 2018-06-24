@@ -12,6 +12,7 @@
 #include "camera.hpp"
 #include "skybox.hpp"
 #include "bounding_box.hpp"
+#include "car.hpp"
 
 // Please always use shared to run this program 
 
@@ -20,7 +21,16 @@ private:
 	int width = 800, height = 600;
 	GLFWwindow* window;
 
-	Camera camera = Camera(glm::vec3(0, 0, 3), 0, 0);
+	Skybox *skybox_ptr;
+	Model *car_model_ptr;
+	Model *city_model_ptr;
+
+	Shader *skybox_shader_ptr;
+	Shader *car_shader_ptr;
+	Shader *city_shader_ptr;
+
+	Camera* camera_ptr;
+	Car *car_ptr;
 
 	glm::mat4 model_matrix;
 
@@ -32,7 +42,6 @@ private:
 
 	static void CursorPosCallback(GLFWwindow *window, double x, double y);
 	static void ScrollCallback(GLFWwindow *window, double xoffset, double yoffset);
-	static glm::mat4 GetProjectionMatrix();
 	static void ProcessInput(GLFWwindow *window);
 	static void FramebufferSizeCallback(GLFWwindow *window, int width, int height);
 
@@ -51,7 +60,7 @@ void Application::CursorPosCallback(GLFWwindow *window, double x, double y) {
 	double new_x = x / shared.width - 0.5;
 	double new_y = y / shared.height - 0.5;
 	if (entered)	
-		shared.camera.Rotate(mouse_x - new_x, mouse_y - new_y);
+		shared.camera_ptr->Rotate(mouse_x - new_x, mouse_y - new_y);
 	mouse_x = new_x;
 	mouse_y = new_y;
 	entered = true;
@@ -65,14 +74,10 @@ void Application::ScrollCallback(GLFWwindow *window, double xoffset, double yoff
 
 void Application::FramebufferSizeCallback(GLFWwindow *window, int width, int height) {
 	glViewport(0, 0, width, height);
-	shared.width = width;  
-	shared.height = height;  
+	shared.width = width;
+	shared.height = height;
+	shared.camera_ptr->set_width_height_ratio(1.0f * width / height);
 }  
-
-glm::mat4 Application::GetProjectionMatrix() {
-	using namespace glm;
-	return perspective(radians(45.0f), 1.0f * shared.width / shared.height, 0.1f, 1000.0f);
-}
 
 void Application::ProcessInput(GLFWwindow *window) {
 	static float current_time, last_time;
@@ -81,14 +86,14 @@ void Application::ProcessInput(GLFWwindow *window) {
 	last_time = current_time;
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-       	shared.camera.Move(MoveDirectionType::FRONT, delta_time);
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) 
+       	shared.car_ptr->Move(MoveDirectionType::FRONT, delta_time);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-       	shared.camera.Move(MoveDirectionType::BACK, delta_time);
+       	shared.car_ptr->Move(MoveDirectionType::BACK, delta_time);
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-       	shared.camera.Move(MoveDirectionType::LEFT, delta_time);
+       	shared.car_ptr->Move(MoveDirectionType::LEFT, delta_time);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-       	shared.camera.Move(MoveDirectionType::RIGHT, delta_time);
+       	shared.car_ptr->Move(MoveDirectionType::RIGHT, delta_time);
 }
 
 Application::Application() {
@@ -113,12 +118,17 @@ Application::Application() {
 void Application::Run() {
 	using namespace glm;
 
-	Skybox skybox_model = Skybox(skybox_urls);
-	Shader skybox_shader = Shader("shaders/skybox.vs", "shaders/skybox.fs");
+	camera_ptr = new Camera(glm::vec3(0, 0, 3), 0, 0, 1.0f * width / height);
 
-	Model city_model = Model("resources/models/city", "city.obj");
-	Shader city_shader = Shader("shaders/city.vs", "shaders/city.fs");
+	skybox_ptr = new Skybox(skybox_urls);
+	skybox_shader_ptr = new Shader("shaders/skybox.vs", "shaders/skybox.fs");
 
+	city_model_ptr = new Model("resources/models/city", "city.obj");
+	city_shader_ptr = new Shader("shaders/city.vs", "shaders/city.fs");
+
+	car_model_ptr = new Model("resources/models/car", "car.obj");
+	car_shader_ptr = new Shader("shaders/car.vs", "shaders/car.fs");
+	car_ptr = new Car(*car_model_ptr, *car_shader_ptr, camera_ptr, vec3(10, 10, 0.5));
 
 	while (!glfwWindowShouldClose(window)) {
 		ProcessInput(window);
@@ -126,27 +136,34 @@ void Application::Run() {
 		glClearColor(0, 0, 0, 0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		skybox_shader.Use();
-		skybox_shader.SetUniform<mat4>("view", mat4(mat3(camera.GetViewMatrix())));
-		skybox_shader.SetUniform<mat4>("projection", GetProjectionMatrix());
-		skybox_shader.SetUniform<mat4>("rotate", rotate(mat4(1), -(float)M_PI / 2, vec3(1, 0, 0)));
+		// skybox
 
-		skybox_model.Draw(skybox_shader);
+		skybox_shader_ptr->Use();
+		skybox_shader_ptr->SetUniform<mat4>("view", mat4(mat3(camera_ptr->GetViewMatrix())));
+		skybox_shader_ptr->SetUniform<mat4>("projection", camera_ptr->GetProjectionMatrix());
+		skybox_shader_ptr->SetUniform<mat4>("rotate", rotate(mat4(1), -(float)M_PI / 2, vec3(1, 0, 0)));
 
-		city_shader.Use();
-		city_shader.SetUniform<mat4>("model", model_matrix);
-		city_shader.SetUniform<mat4>("view", camera.GetViewMatrix());
-		city_shader.SetUniform<mat4>("projection", GetProjectionMatrix());
+		skybox_ptr->Draw(*skybox_shader_ptr);
+
+		// city
+
+		city_shader_ptr->Use();
+		city_shader_ptr->SetUniform<mat4>("model", model_matrix);
+		city_shader_ptr->SetUniform<mat4>("view", camera_ptr->GetViewMatrix());
+		city_shader_ptr->SetUniform<mat4>("projection", camera_ptr->GetProjectionMatrix());
 		
-		city_shader.SetUniform<vec3>("light.position", vec3(200, 200, 500));
-		city_shader.SetUniform<vec3>("light.ambient", vec3(0.6, 0.6, 0.6));
-		city_shader.SetUniform<vec3>("light.diffuse", vec3(1, 1, 1));
-		city_shader.SetUniform<vec3>("light.specular", vec3(1, 1, 1));
+		city_shader_ptr->SetUniform<vec3>("light.position", vec3(200, 200, 500));
+		city_shader_ptr->SetUniform<vec3>("light.ambient", vec3(0.6, 0.6, 0.6));
+		city_shader_ptr->SetUniform<vec3>("light.diffuse", vec3(1, 1, 1));
+		city_shader_ptr->SetUniform<vec3>("light.specular", vec3(1, 1, 1));
 
-		city_shader.SetUniform<vec3>("view_position", camera.position());
-		city_shader.SetUniform<float>("material.shininess", 32);
+		city_shader_ptr->SetUniform<vec3>("view_position", camera_ptr->position());
+		city_shader_ptr->SetUniform<float>("material.shininess", 32);
 
-		city_model.Draw(city_shader);
+		city_model_ptr->Draw(*city_shader_ptr);
+
+		// car
+		car_ptr->Draw();
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
