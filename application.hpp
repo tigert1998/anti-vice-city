@@ -23,11 +23,11 @@ private:
 
 	Skybox *skybox_ptr;
 	Model *car_model_ptr;
-	Model *city_model_ptr;
+	Model *world_model_ptr;
 
 	Shader *skybox_shader_ptr;
 	Shader *car_shader_ptr;
-	Shader *city_shader_ptr;
+	Shader *world_shader_ptr;
 
 	Camera* camera_ptr;
 	Car *car_ptr;
@@ -87,13 +87,13 @@ void Application::ProcessInput(GLFWwindow *window) {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) 
-       	shared.car_ptr->Move(MoveDirectionType::FRONT, delta_time);
+       	shared.camera_ptr->Move(MoveDirectionType::FRONT, delta_time);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-       	shared.car_ptr->Move(MoveDirectionType::BACK, delta_time);
+       	shared.camera_ptr->Move(MoveDirectionType::BACK, delta_time);
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-       	shared.car_ptr->Move(MoveDirectionType::LEFT, delta_time);
+       	shared.camera_ptr->Move(MoveDirectionType::LEFT, delta_time);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-       	shared.car_ptr->Move(MoveDirectionType::RIGHT, delta_time);
+       	shared.camera_ptr->Move(MoveDirectionType::RIGHT, delta_time);
 }
 
 Application::Application() {
@@ -112,7 +112,7 @@ Application::Application() {
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	glEnable(GL_DEPTH_TEST);
-	model_matrix = scale(rotate(mat4(1), (float)M_PI / 2, vec3(1, 0, 0)), vec3(0.001, 0.001, 0.001));
+	model_matrix = scale(mat4(1), vec3(50, 50, 50)) * rotate(mat4(1), (float)M_PI / 2, vec3(1, 0, 0));
 }
 
 void Application::Run() {
@@ -123,10 +123,10 @@ void Application::Run() {
 	skybox_ptr = new Skybox(skybox_urls);
 	skybox_shader_ptr = new Shader("shaders/skybox.vs", "shaders/skybox.fs");
 
-	city_model_ptr = new Model("resources/models/city", "city.obj");
-	city_shader_ptr = new Shader("shaders/city.vs", "shaders/city.fs");
+	world_model_ptr = new Model("resources/models/world", "world.obj");
+	world_shader_ptr = new Shader("shaders/world.vs", "shaders/world.fs");
 
-	car_model_ptr = new Model("resources/models/car", "car.obj");
+	car_model_ptr = new Model("resources/models/car", "tank_tigher.obj");
 	car_shader_ptr = new Shader("shaders/car.vs", "shaders/car.fs");
 	car_ptr = new Car(*car_model_ptr, *car_shader_ptr, camera_ptr, vec3(10, 10, 0.5));
 
@@ -145,22 +145,22 @@ void Application::Run() {
 
 		skybox_ptr->Draw(*skybox_shader_ptr);
 
-		// city
+		// world
 
-		city_shader_ptr->Use();
-		city_shader_ptr->SetUniform<mat4>("model", model_matrix);
-		city_shader_ptr->SetUniform<mat4>("view", camera_ptr->GetViewMatrix());
-		city_shader_ptr->SetUniform<mat4>("projection", camera_ptr->GetProjectionMatrix());
+		world_shader_ptr->Use();
+		world_shader_ptr->SetUniform<mat4>("model", model_matrix);
+		world_shader_ptr->SetUniform<mat4>("view", camera_ptr->GetViewMatrix());
+		world_shader_ptr->SetUniform<mat4>("projection", camera_ptr->GetProjectionMatrix());
 		
-		city_shader_ptr->SetUniform<vec3>("light.position", vec3(200, 200, 500));
-		city_shader_ptr->SetUniform<vec3>("light.ambient", vec3(0.6, 0.6, 0.6));
-		city_shader_ptr->SetUniform<vec3>("light.diffuse", vec3(1, 1, 1));
-		city_shader_ptr->SetUniform<vec3>("light.specular", vec3(1, 1, 1));
+		world_shader_ptr->SetUniform<vec3>("light.position", vec3(200, 200, 500));
+		world_shader_ptr->SetUniform<vec3>("light.ambient", vec3(0.6, 0.6, 0.6));
+		world_shader_ptr->SetUniform<vec3>("light.diffuse", vec3(1, 1, 1));
+		world_shader_ptr->SetUniform<vec3>("light.specular", vec3(1, 1, 1));
 
-		city_shader_ptr->SetUniform<vec3>("view_position", camera_ptr->position());
-		city_shader_ptr->SetUniform<float>("material.shininess", 32);
+		world_shader_ptr->SetUniform<vec3>("view_position", camera_ptr->position());
+		world_shader_ptr->SetUniform<float>("material.shininess", 32);
 
-		city_model_ptr->Draw(*city_shader_ptr);
+		world_model_ptr->Draw(*world_shader_ptr);
 
 		// car
 		car_ptr->Draw();

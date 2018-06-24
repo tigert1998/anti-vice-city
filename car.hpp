@@ -31,7 +31,7 @@ Car::Car(const Model &model, const Shader &shader, Camera *camera_ptr, glm::vec3
 
 void Car::Draw() const {
 	using namespace glm;
-	mat4 model = scale(rotate(mat4(1), (float)M_PI / 2, vec3(1, 0, 0)), vec3(0.02, 0.02, 0.02));
+	mat4 model = scale(rotate(mat4(1), (float)M_PI / 2, vec3(1, 0, 0)), vec3(0.001, 0.001, 0.001));
 	model = translate(mat4(1), position_) * model;
 
 	shader_.Use();

@@ -30,6 +30,7 @@ void FilpImageDataDiagonally(unsigned char *image, int w, int h, int comp) {
 
 uint32_t LoadTexture(std::string url) {
     using namespace std;
+    for (int i = 0; i < url.length(); i++) if (url[i] == '\\') url[i] = '/';
     GLuint texture;
     static map<string, GLuint> mem;
     if (mem.count(url)) return mem[url];
