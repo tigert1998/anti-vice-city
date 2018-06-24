@@ -16,8 +16,8 @@ private:
 class ShaderCompileError: public std::exception {
 public:
 	ShaderCompileError() = delete;
-	ShaderCompileError(const std::string &log) {
-		error_message = "[shader compile error] " + log;
+	ShaderCompileError(const std::string &title, const std::string &log) {
+		error_message = "[shader compile error on " + title + "] " + log;
 	}
 	const char *what() const noexcept {
 		return error_message.c_str();

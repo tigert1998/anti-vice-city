@@ -74,7 +74,7 @@ void Mesh::InitMesh() {
 
 void Mesh::Draw(Shader shader) const {
 	using namespace std;
-	uint32_t diffuse_total = 0, specular_total = 0, normals_total = 0, ambient_total;
+	uint32_t diffuse_total = 0, specular_total = 0, normals_total = 0, ambient_total = 0;
 	for (int i = 0; i < textures.size(); i++) {
 		glActiveTexture(GL_TEXTURE0 + i);
 		glBindTexture(GL_TEXTURE_2D, textures[i].id);

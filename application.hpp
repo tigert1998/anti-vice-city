@@ -117,6 +117,7 @@ Application::Application() {
 
 void Application::Run() {
 	using namespace glm;
+	using namespace std;
 
 	camera_ptr = new Camera(glm::vec3(0, 0, 3), 0, 0, 1.0f * width / height);
 
@@ -161,7 +162,6 @@ void Application::Run() {
 		world_shader_ptr->SetUniform<float>("material.shininess", 32);
 
 		world_model_ptr->Draw(*world_shader_ptr);
-
 		// car
 		car_ptr->Draw();
 

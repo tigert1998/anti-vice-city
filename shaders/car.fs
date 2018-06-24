@@ -4,6 +4,7 @@ struct Material {
 	sampler2D texture_diffuse_0;
 	sampler2D texture_specular_0;
 	sampler2D texture_normals_0;
+	sampler2D texture_ambient_0;
 
 	float shininess;
 };

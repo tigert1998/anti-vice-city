@@ -22,7 +22,7 @@ public:
 private:
 	const FileManager &file_manager = FileManager::shared;
 
-	static uint32_t Compile(GLenum type, const std::string &source);
+	static uint32_t Compile(GLenum type, const std::string &source, const std::string &path);
 	static uint32_t Link(uint32_t vs_id, uint32_t fs_id);
 
 	uint32_t id;
@@ -31,12 +31,12 @@ private:
 Shader::Shader(const std::string &vs_path, const std::string &fs_path) {
 	auto vs_source = file_manager.FileContentAt(vs_path);
 	auto fs_source = file_manager.FileContentAt(fs_path);
-	auto vs_id = Compile(GL_VERTEX_SHADER, vs_source);
-	auto fs_id = Compile(GL_FRAGMENT_SHADER, fs_source);
+	auto vs_id = Compile(GL_VERTEX_SHADER, vs_source, vs_path);
+	auto fs_id = Compile(GL_FRAGMENT_SHADER, fs_source, fs_path);
 	id = Link(vs_id, fs_id);
 }
 
-uint32_t Shader::Compile(GLenum type, const std::string &source) {
+uint32_t Shader::Compile(GLenum type, const std::string &source, const std::string &path) {
 	uint32_t shader_id = glCreateShader(type);
 	const char *temp = source.c_str();
 	glShaderSource(shader_id, 1, &temp, nullptr);
@@ -50,7 +50,7 @@ uint32_t Shader::Compile(GLenum type, const std::string &source) {
 	glGetShaderInfoLog(shader_id, length, nullptr, log);
 	std::string log_str = log;
 	delete [] log;
-	throw ShaderCompileError(log_str);
+	throw ShaderCompileError(path, log_str);
 }
 
 uint32_t Shader::Link(uint32_t vs_id, uint32_t fs_id) {
