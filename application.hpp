@@ -74,7 +74,7 @@ void Application::KeyCallback(GLFWwindow *window, int key, int scancode, int act
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GL_TRUE);
     else
-    	keys_pressed[key] = action == GLFW_PRESS;
+    	keys_pressed[key] = action != GLFW_RELEASE;
 }
 
 void Application::ProcessInput(GLFWwindow *window) {

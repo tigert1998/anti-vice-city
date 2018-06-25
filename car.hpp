@@ -78,6 +78,5 @@ void Car::Move(MoveDirectionType direction, float time) {
 			position_ += right * time;
 			break;
 	}
-	cout << "(" << position_.x << ", " << position_.y << ", " << position_.z << ")" << endl;
 	CameraAccompany();
 }
