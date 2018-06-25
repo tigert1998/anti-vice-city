@@ -9,50 +9,55 @@ private:
 	const glm::vec3 front_ = glm::vec3(1, 0, 0);
 	const Model &model_;
 	const Shader &shader_;
-	Camera *camera_ptr_;
+	Camera &camera_;
 	glm::vec3 position_;
 	double x_, y_;
 	void CameraAccompany();
 
 public:
 	Car() = delete;
-	Car(const Model &model, const Shader &shader, Camera *camera_ptr, glm::vec3);
+	Car(const Model &model, const Shader &shader, Camera &camera_ptr, glm::vec3);
 	void Draw() const;
 	void Move(MoveDirectionType, float time);
+	glm::mat4 model_matrix() const;
 };
 
-Car::Car(const Model &model, const Shader &shader, Camera *camera_ptr, glm::vec3 position):
+glm::mat4 Car::model_matrix() const {
+	using namespace glm;
+	mat4 model = scale(rotate(mat4(1), (float)M_PI / 2, vec3(1, 0, 0)), vec3(0.0002, 0.0002, 0.0002));
+	model = translate(mat4(1), position_) * model;
+	return model;
+}
+
+Car::Car(const Model &model, const Shader &shader, Camera &camera, glm::vec3 position):
 	model_(model),
 	shader_(shader),
-	camera_ptr_(camera_ptr),
+	camera_(camera),
 	position_(position) {
 	CameraAccompany();
 }
 
 void Car::Draw() const {
 	using namespace glm;
-	mat4 model = scale(rotate(mat4(1), (float)M_PI / 2, vec3(1, 0, 0)), vec3(0.0002, 0.0002, 0.0002));
-	model = translate(mat4(1), position_) * model;
 	shader_.Use();
-	shader_.SetUniform<mat4>("model", model);
-	shader_.SetUniform<mat4>("view", camera_ptr_->GetViewMatrix());
-	shader_.SetUniform<mat4>("projection", camera_ptr_->GetProjectionMatrix());
+	shader_.SetUniform<mat4>("model", model_matrix());
+	shader_.SetUniform<mat4>("view", camera_.GetViewMatrix());
+	shader_.SetUniform<mat4>("projection", camera_.GetProjectionMatrix());
 		
 	shader_.SetUniform<vec3>("light.position", vec3(200, 200, 500));
 	shader_.SetUniform<vec3>("light.ambient", vec3(0.6, 0.6, 0.6));
 	shader_.SetUniform<vec3>("light.diffuse", vec3(1, 1, 1));
 	shader_.SetUniform<vec3>("light.specular", vec3(1, 1, 1));
 
-	shader_.SetUniform<vec3>("view_position", camera_ptr_->position());
+	shader_.SetUniform<vec3>("view_position", camera_.position());
 	shader_.SetUniform<float>("material.shininess", 32);
 
 	model_.Draw(shader_);
 }
 
 void Car::CameraAccompany() {
-	if (camera_ptr_ == nullptr) return;
 	double x = position_.x, y = position_.y, z = position_.z;
-	camera_ptr_->set_position(glm::vec3(x - 0.2, y, z + 0.1));
+	camera_.set_position(glm::vec3(x - 0.2, y, z + 0.1));
 }
 
 void Car::Move(MoveDirectionType direction, float time) {

@@ -17,7 +17,7 @@
 class Model {
 private:
 	std::string path;
-	std::vector<Mesh> meshes;
+	std::vector<Mesh> meshes_;
 	std::vector<BoundingBox> boxes;
 
 	void DFSNode(aiNode *, const aiScene *);
@@ -29,7 +29,23 @@ public:
 	Model(const std::string &, const std::string &);
 
 	void Draw(Shader) const;
+	const std::vector<Mesh> &meshes() const;
+	bool Conflict(const Model &model, glm::mat4 a_model_matrix, glm::mat4 b_model_matrix) const;
 };
+
+bool Model::Conflict(const Model &model, glm::mat4 a_model_matrix, glm::mat4 b_model_matrix) const {
+	glm::mat4 transform_from_b_to_a = inverse(a_model_matrix) * b_model_matrix;
+	glm::mat4 transform_from_a_to_b = inverse(b_model_matrix) * a_model_matrix;
+	for (const BoundingBox &a_box: this->boxes)
+		for (const BoundingBox &b_box: model.boxes) 
+			if (a_box.Conflict(b_box, transform_from_b_to_a, transform_from_a_to_b))
+				return true;
+	return false;
+}
+
+const std::vector<Mesh> &Model::meshes() const {
+	return meshes_;
+}
 
 Model::Model(const std::string &path, const std::string &file): path(path) {
 	using namespace Assimp;
@@ -47,7 +63,7 @@ Model::Model(const std::string &path, const std::string &file): path(path) {
 }
 
 void Model::Draw(Shader shader) const {
-	for (const Mesh &i : meshes)
+	for (const Mesh &i : meshes_)
 		i.Draw(shader);
 
 #ifdef DEBUG
@@ -61,7 +77,7 @@ void Model::DFSNode(aiNode *node, const aiScene *scene) {
 	for (int i = 0; i < node->mNumMeshes; i++) {
 		aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
 		Mesh m = DealMesh(mesh, scene);
-		meshes.push_back(m);
+		meshes_.push_back(m);
 
 		// bounding box
 		BoundingBox box(m);

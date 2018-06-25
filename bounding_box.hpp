@@ -11,21 +11,33 @@ class BoundingBox
 {
 private:
 	glm::vec3 big, small;
-	glm::mat4 model;
-
 	uint32_t vao, vbo, ebo;
 	glm::vec3 vertices[8];
 	const GLushort indices[24] = { 0, 1, 0, 2, 0, 4, 1, 3, 1, 5, 2, 3, 2, 6, 3, 7, 4, 5, 4, 6, 5, 7, 6 ,7 };
 
 public:
-	BoundingBox(const Mesh & mesh);
+	BoundingBox(const Mesh &mesh);
 	virtual ~BoundingBox();
 
-	void SetModel(glm::mat4 model);
-	bool InBox(glm::vec3 position);
+	bool InBox(glm::vec3 position) const;
 	void InitDraw();
 	void Draw() const;
+
+	bool Conflict(const BoundingBox &box, glm::mat4 transform_from_b_to_a, glm::mat4 transform_from_a_to_b) const;
 };
+
+bool BoundingBox::Conflict(const BoundingBox &box, glm::mat4 transform_from_b_to_a, glm::mat4 transform_from_a_to_b) const {
+	using namespace glm;
+	for (vec3 vertex: box.vertices) {
+		vertex = transform_from_b_to_a * vec4(vertex, 1);
+		if (this->InBox(vertex)) return true;
+	}
+	for (vec3 vertex: vertices) {
+		vertex = transform_from_a_to_b * vec4(vertex, 1);
+		if (box.InBox(vertex)) return true;
+	}
+	return false;
+}
 
 BoundingBox::~BoundingBox()
 {
@@ -66,21 +78,10 @@ BoundingBox::BoundingBox(const Mesh & mesh)
 	this->vertices[7] = vec3(this->big.x,   this->big.y,   this->big.z);
 }
 
-void BoundingBox::SetModel(glm::mat4 model)
-{
-	this->model = model;
-}
-
-bool BoundingBox::InBox(glm::vec3 position)
-{
-	using glm::vec4;
-
-	vec4 real_big = model * vec4(big, 0);
-	vec4 real_small = model * vec4(small, 0);
-
-    return real_small.x <= position.x && position.x <= real_big.x &&
-           real_small.y <= position.y && position.y <= real_big.y &&
-           real_small.z <= position.z && position.z <= real_big.z;
+bool BoundingBox::InBox(glm::vec3 position) const {
+    return small.x <= position.x && position.x <= big.x &&
+           small.y <= position.y && position.y <= big.y &&
+           small.z <= position.z && position.z <= big.z;
 }
 
 #ifdef DEBUG
