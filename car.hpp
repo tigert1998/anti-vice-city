@@ -6,7 +6,7 @@
 class Car {
 private:
 	const glm::vec3 up_ = glm::vec3(0, 0, 1);
-	const glm::vec3 front_ = glm::vec3(0, -1, 0);
+	const glm::vec3 front_ = glm::vec3(1, 0, 0);
 	const Model &model_;
 	const Shader &shader_;
 	Camera *camera_ptr_;
@@ -31,9 +31,8 @@ Car::Car(const Model &model, const Shader &shader, Camera *camera_ptr, glm::vec3
 
 void Car::Draw() const {
 	using namespace glm;
-	mat4 model = scale(rotate(mat4(1), (float)M_PI / 2, vec3(1, 0, 0)), vec3(0.001, 0.001, 0.001));
+	mat4 model = scale(rotate(mat4(1), (float)M_PI / 2, vec3(1, 0, 0)), vec3(0.0002, 0.0002, 0.0002));
 	model = translate(mat4(1), position_) * model;
-
 	shader_.Use();
 	shader_.SetUniform<mat4>("model", model);
 	shader_.SetUniform<mat4>("view", camera_ptr_->GetViewMatrix());
@@ -53,10 +52,11 @@ void Car::Draw() const {
 void Car::CameraAccompany() {
 	if (camera_ptr_ == nullptr) return;
 	double x = position_.x, y = position_.y, z = position_.z;
-	camera_ptr_->set_position(glm::vec3(x, y + 1, z + 0.5));
+	camera_ptr_->set_position(glm::vec3(x - 0.2, y, z + 0.1));
 }
 
 void Car::Move(MoveDirectionType direction, float time) {
+	using namespace std;
 	auto left = glm::cross(up_, front_);
 	auto right = -left;
 	switch (direction) {
@@ -73,5 +73,6 @@ void Car::Move(MoveDirectionType direction, float time) {
 			position_ += right * time;
 			break;
 	}
+	cout << "(" << position_.x << ", " << position_.y << ", " << position_.z << ")" << endl;
 	CameraAccompany();
 }

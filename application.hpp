@@ -2,6 +2,8 @@
 
 #define GL_GLEXT_PROTOTYPES
 
+#include <algorithm>
+
 #include <GL/gl.h>
 #include <GL/glext.h>
 #include <GLFW/glfw3.h>
@@ -40,10 +42,13 @@ private:
   		"resources/skybox/front.jpg", "resources/skybox/back.jpg"
 	};
 
+	static bool keys_pressed[1024];
+
 	static void CursorPosCallback(GLFWwindow *window, double x, double y);
 	static void ScrollCallback(GLFWwindow *window, double xoffset, double yoffset);
 	static void ProcessInput(GLFWwindow *window);
 	static void FramebufferSizeCallback(GLFWwindow *window, int width, int height);
+	static void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mode);
 
 public:
 	static Application shared;
@@ -51,6 +56,8 @@ public:
 	void Run();
 
 };
+
+bool Application::keys_pressed[1024] = {};
 
 Application Application::shared = Application();
 
@@ -77,23 +84,28 @@ void Application::FramebufferSizeCallback(GLFWwindow *window, int width, int hei
 	shared.width = width;
 	shared.height = height;
 	shared.camera_ptr->set_width_height_ratio(1.0f * width / height);
-}  
+}
+
+void Application::KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mode) {
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, GL_TRUE);
+    else
+    	keys_pressed[key] = action == GLFW_PRESS;
+}
 
 void Application::ProcessInput(GLFWwindow *window) {
 	static float current_time, last_time;
 	current_time = glfwGetTime();
 	float delta_time = current_time - last_time;
 	last_time = current_time;
-	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-		glfwSetWindowShouldClose(window, true);
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) 
-       	shared.camera_ptr->Move(MoveDirectionType::FRONT, delta_time);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-       	shared.camera_ptr->Move(MoveDirectionType::BACK, delta_time);
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-       	shared.camera_ptr->Move(MoveDirectionType::LEFT, delta_time);
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-       	shared.camera_ptr->Move(MoveDirectionType::RIGHT, delta_time);
+	if (keys_pressed[GLFW_KEY_W]) 
+       	shared.car_ptr->Move(MoveDirectionType::FRONT, delta_time);
+    if (keys_pressed[GLFW_KEY_S])
+       	shared.car_ptr->Move(MoveDirectionType::BACK, delta_time);
+    if (keys_pressed[GLFW_KEY_A])
+       	shared.car_ptr->Move(MoveDirectionType::LEFT, delta_time);
+    if (keys_pressed[GLFW_KEY_D])
+       	shared.car_ptr->Move(MoveDirectionType::RIGHT, delta_time);
 }
 
 Application::Application() {
@@ -108,6 +120,7 @@ Application::Application() {
 	glfwSetCursorPosCallback(window, CursorPosCallback);
 	glfwSetScrollCallback(window, ScrollCallback);
 	glfwSetFramebufferSizeCallback(window, FramebufferSizeCallback);
+	glfwSetKeyCallback(window, KeyCallback);
 
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
@@ -129,7 +142,7 @@ void Application::Run() {
 
 	car_model_ptr = new Model("resources/models/car", "tank_tigher.obj");
 	car_shader_ptr = new Shader("shaders/car.vs", "shaders/car.fs");
-	car_ptr = new Car(*car_model_ptr, *car_shader_ptr, camera_ptr, vec3(10, 10, 0.5));
+	car_ptr = new Car(*car_model_ptr, *car_shader_ptr, camera_ptr, vec3(4, 19, 0.5));
 
 	while (!glfwWindowShouldClose(window)) {
 		ProcessInput(window);
