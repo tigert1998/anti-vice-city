@@ -10,12 +10,17 @@ public:
 	World(const Model &model, const Shader &shader, const Camera &camera);
 	void Draw() const;
 	glm::mat4 model_matrix() const;
+	const Model &model() const;
 
 private:
 	const Model &model_;
 	const Shader &shader_;
 	const Camera &camera_;
 };
+
+const Model &World::model() const {
+	return model_;
+}
 
 glm::mat4 World::model_matrix() const {
 	using namespace glm;

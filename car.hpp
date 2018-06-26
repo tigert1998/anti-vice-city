@@ -27,9 +27,14 @@ public:
 
 	void CameraAccompany();
 	void Rotate(double delta_alpha);
+	const Model &model() const;
 	void Enable();
 	void Disable();
 };
+
+const Model &Car::model() const {
+	return model_;
+}
 
 glm::mat4 Car::model_matrix() const {
 	using namespace glm;
@@ -105,6 +110,7 @@ void Car::Move(MoveDirectionType direction, float time) {
 	CameraAccompany();
 
 	last_dir = direction;
+	cout << position_.x << ", " << position_.y << ", " << position_.z << endl;
 }
 
 void Car::Rotate(double delta_alpha) {

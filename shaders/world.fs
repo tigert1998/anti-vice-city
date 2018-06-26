@@ -16,6 +16,12 @@ struct Light {
 	vec3 specular;
 };
 
+struct Shadow {
+	sampler2D texture;
+	mat4 view_projection_matrix;
+};
+
+uniform Shadow shadow;
 uniform Material material;
 uniform Light light;
 uniform vec3 view_position;
