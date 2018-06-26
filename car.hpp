@@ -3,6 +3,8 @@
 #include "model.hpp"
 #include "camera.hpp"
 
+#include <iostream>
+
 class Car {
 private:
 	const glm::vec3 up_ = glm::vec3(0, 0, 1);
@@ -12,6 +14,7 @@ private:
 	Camera &camera_;
 	glm::vec3 position_;
 	double x_, y_;
+	bool motion_;
 	void CameraAccompany();
 
 public:
@@ -20,6 +23,8 @@ public:
 	void Draw() const;
 	void Move(MoveDirectionType, float time);
 	glm::mat4 model_matrix() const;
+	void Enable();
+	void Disable();
 };
 
 glm::mat4 Car::model_matrix() const {
@@ -30,6 +35,7 @@ glm::mat4 Car::model_matrix() const {
 }
 
 Car::Car(const Model &model, const Shader &shader, Camera &camera, glm::vec3 position):
+	motion_(true),
 	model_(model),
 	shader_(shader),
 	camera_(camera),
@@ -61,6 +67,11 @@ void Car::CameraAccompany() {
 }
 
 void Car::Move(MoveDirectionType direction, float time) {
+	static MoveDirectionType last_dir;
+	if (!this->motion_ && direction == last_dir) {
+		return;
+	}
+
 	using namespace std;
 	auto left = glm::cross(up_, front_);
 	auto right = -left;
@@ -79,4 +90,16 @@ void Car::Move(MoveDirectionType direction, float time) {
 			break;
 	}
 	CameraAccompany();
+
+	last_dir = direction;
+}
+
+void Car::Enable()
+{
+	this->motion_ = true;
+}
+
+void Car::Disable()
+{
+	this->motion_ = false;
 }

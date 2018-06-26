@@ -3,6 +3,10 @@
 #include <string>
 #include <vector>
 
+#ifdef DEBUG
+#include <iostream>
+#endif
+
 #include "opengl_util.hpp"
 #include "mesh.hpp"
 
@@ -14,6 +18,7 @@ private:
 	uint32_t vao, vbo, ebo;
 	glm::vec3 vertices[8];
 	const GLushort indices[24] = { 0, 1, 0, 2, 0, 4, 1, 3, 1, 5, 2, 3, 2, 6, 3, 7, 4, 5, 4, 6, 5, 7, 6 ,7 };
+	float GetVolumn() const;
 
 public:
 	BoundingBox(const Mesh &mesh);
@@ -27,14 +32,29 @@ public:
 };
 
 bool BoundingBox::Conflict(const BoundingBox &box, glm::mat4 transform_from_b_to_a, glm::mat4 transform_from_a_to_b) const {
+	const float bound = 0.006;
+	if (box.GetVolumn() > bound) {
+		return false;
+	}
+
 	using namespace glm;
 	for (vec3 vertex: box.vertices) {
 		vertex = transform_from_b_to_a * vec4(vertex, 1);
-		if (this->InBox(vertex)) return true;
+		if (this->InBox(vertex)) {
+// #ifdef DEBUG
+// 			std::cout << this->GetVolumn() << std::endl;
+// #endif
+			return true;
+		}
 	}
 	for (vec3 vertex: vertices) {
 		vertex = transform_from_a_to_b * vec4(vertex, 1);
-		if (box.InBox(vertex)) return true;
+		if (box.InBox(vertex)) {
+// #ifdef DEBUG
+// 			std::cout << box.GetVolumn() << std::endl;
+// #endif
+			return true;
+		}
 	}
 	return false;
 }
@@ -82,6 +102,15 @@ bool BoundingBox::InBox(glm::vec3 position) const {
     return small.x <= position.x && position.x <= big.x &&
            small.y <= position.y && position.y <= big.y &&
            small.z <= position.z && position.z <= big.z;
+}
+
+float BoundingBox::GetVolumn() const
+{
+	float dx = this->big.x - this->small.x;
+	float dy = this->big.y - this->small.y;
+	float dz = this->big.z - this->small.z;
+
+	return dx * dy * dz;
 }
 
 #ifdef DEBUG

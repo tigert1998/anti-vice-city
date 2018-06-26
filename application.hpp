@@ -2,6 +2,10 @@
 
 #define GL_GLEXT_PROTOTYPES
 
+#ifdef DEBUG
+#include <iostream>
+#endif
+
 #include <algorithm>
 
 #include <GL/gl.h>
@@ -136,6 +140,12 @@ void Application::Run() {
 		skybox_ptr->Draw();
 		world_ptr->Draw();
 		car_ptr->Draw();
+
+		if (car_model_ptr->Conflict(*world_model_ptr, car_ptr->model_matrix(), world_ptr->model_matrix())) {
+			car_ptr->Disable();
+		} else {
+			car_ptr->Enable();
+		}
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
