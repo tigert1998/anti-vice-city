@@ -8,14 +8,15 @@
 class Car {
 private:
 	const glm::vec3 up_ = glm::vec3(0, 0, 1);
-	const glm::vec3 front_ = glm::vec3(1, 0, 0);
+	// const glm::vec3 front_ = glm::vec3(1, 0, 0);
+	glm::vec3 front_;
 	const Model &model_;
 	const Shader &shader_;
 	Camera &camera_;
 	glm::vec3 position_;
-	double x_, y_;
+
+	double alpha_;
 	bool motion_;
-	void CameraAccompany();
 
 public:
 	Car() = delete;
@@ -23,18 +24,28 @@ public:
 	void Draw() const;
 	void Move(MoveDirectionType, float time);
 	glm::mat4 model_matrix() const;
+
+	void CameraAccompany();
+	void Rotate(double delta_alpha);
 	void Enable();
 	void Disable();
 };
 
 glm::mat4 Car::model_matrix() const {
 	using namespace glm;
-	mat4 model = scale(rotate(mat4(1), (float)M_PI / 2, vec3(1, 0, 0)), vec3(0.0002, 0.0002, 0.0002));
+	mat4 model(1);
+	model = rotate(model, (float)M_PI / 2, vec3(1, 0, 0));
+	model = scale(model, vec3(0.0002, 0.0002, 0.0002));
+	model = rotate(model, (float)this->alpha_, vec3(0, 1, 0));
 	model = translate(mat4(1), position_) * model;
+
+	// std::cout << position_.x << " " << position_.y << " " << position_.z << std::endl;
+
 	return model;
 }
 
 Car::Car(const Model &model, const Shader &shader, Camera &camera, glm::vec3 position):
+	alpha_(0.0),
 	motion_(true),
 	model_(model),
 	shader_(shader),
@@ -62,8 +73,10 @@ void Car::Draw() const {
 }
 
 void Car::CameraAccompany() {
-	double x = position_.x, y = position_.y, z = position_.z;
-	camera_.set_position(glm::vec3(x - 0.2, y, z + 0.1));
+	// double x = position_.x, y = position_.y, z = position_.z;
+	// camera_.set_position(position_ + glm::vec3(-0.2, 0, 0.1));
+	camera_.set_position(position_ - 0.1f * front_ + glm::vec3(0, 0, 0.1));
+	// camera_.set_position(position_ - 0.1f * front_);
 }
 
 void Car::Move(MoveDirectionType direction, float time) {
@@ -92,6 +105,11 @@ void Car::Move(MoveDirectionType direction, float time) {
 	CameraAccompany();
 
 	last_dir = direction;
+}
+
+void Car::Rotate(double delta_alpha) {
+	this->alpha_ += delta_alpha;
+	this->front_ = glm::vec3(cos(this->alpha_), sin(this->alpha_), 0);
 }
 
 void Car::Enable()

@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <algorithm>
 
 #ifdef DEBUG
 #include <iostream>
@@ -27,6 +28,7 @@ public:
 	bool InBox(glm::vec3 position) const;
 	void InitDraw();
 	void Draw() const;
+	void Merge(const BoundingBox &);
 
 	bool Conflict(const BoundingBox &box, glm::mat4 transform_from_b_to_a, glm::mat4 transform_from_a_to_b) const;
 };
@@ -111,6 +113,16 @@ float BoundingBox::GetVolumn() const
 	float dz = this->big.z - this->small.z;
 
 	return dx * dy * dz;
+}
+
+void BoundingBox::Merge(const BoundingBox & box)
+{
+	this->small.x = std::min(this->small.x, box.small.x);
+	this->small.y = std::min(this->small.y, box.small.y);
+	this->small.z = std::min(this->small.z, box.small.z);
+	this->big.x = std::max(this->big.x, box.big.x);
+	this->big.y = std::max(this->big.y, box.big.y);
+	this->big.z = std::max(this->big.z, box.big.z);
 }
 
 #ifdef DEBUG

@@ -18,7 +18,8 @@ class Model {
 private:
 	std::string path;
 	std::vector<Mesh> meshes_;
-	std::vector<BoundingBox> boxes;
+	std::vector<BoundingBox> boxes_;
+	bool single_bounding_box_;
 
 	void DFSNode(aiNode *, const aiScene *);
 	Mesh DealMesh(aiMesh *, const aiScene *);
@@ -26,7 +27,7 @@ private:
 
 public:
 	Model() = delete;
-	Model(const std::string &, const std::string &);
+	Model(const std::string &, const std::string &, bool);
 
 	void Draw(Shader) const;
 	const std::vector<Mesh> &meshes() const;
@@ -36,8 +37,8 @@ public:
 bool Model::Conflict(const Model &model, glm::mat4 a_model_matrix, glm::mat4 b_model_matrix) const {
 	glm::mat4 transform_from_b_to_a = inverse(a_model_matrix) * b_model_matrix;
 	glm::mat4 transform_from_a_to_b = inverse(b_model_matrix) * a_model_matrix;
-	for (const BoundingBox &a_box: this->boxes)
-		for (const BoundingBox &b_box: model.boxes) 
+	for (const BoundingBox &a_box: this->boxes_)
+		for (const BoundingBox &b_box: model.boxes_)
 			if (a_box.Conflict(b_box, transform_from_b_to_a, transform_from_a_to_b))
 				return true;
 	return false;
@@ -47,7 +48,7 @@ const std::vector<Mesh> &Model::meshes() const {
 	return meshes_;
 }
 
-Model::Model(const std::string &path, const std::string &file): path(path) {
+Model::Model(const std::string &path, const std::string &file, bool single_bounding_box): path(path), single_bounding_box_(single_bounding_box) {
 	using namespace Assimp;
 	using namespace std;
 	Importer importer;
@@ -67,7 +68,7 @@ void Model::Draw(Shader shader) const {
 		i.Draw(shader);
 
 #ifdef DEBUG
-	for (const BoundingBox & box : boxes) {
+	for (const BoundingBox & box : boxes_) {
 		box.Draw();
 	}
 #endif
@@ -81,10 +82,14 @@ void Model::DFSNode(aiNode *node, const aiScene *scene) {
 
 		// bounding box
 		BoundingBox box(m);
+		if (boxes_.empty() || !single_bounding_box_) {
 #ifdef DEBUG
-		box.InitDraw();
+			box.InitDraw();
 #endif
-		boxes.push_back(box);
+			boxes_.push_back(box);
+		} else {
+			boxes_.back().Merge(box);
+		}
 	}
 	for (int i = 0; i < node->mNumChildren; i++) {
 		DFSNode(node->mChildren[i], scene);

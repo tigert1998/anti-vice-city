@@ -60,8 +60,11 @@ void Application::CursorPosCallback(GLFWwindow *window, double x, double y) {
 	static bool entered = false;
 	double new_x = x / shared.width - 0.5;
 	double new_y = y / shared.height - 0.5;
-	if (entered)
+	if (entered) {
 		shared.camera_ptr->Rotate(mouse_x - new_x, mouse_y - new_y);
+		shared.car_ptr->Rotate(mouse_x - new_x);
+		shared.car_ptr->CameraAccompany();
+	}
 	mouse_x = new_x;
 	mouse_y = new_y;
 	entered = true;
@@ -123,13 +126,13 @@ void Application::Run() {
 	Shader *skybox_shader_ptr = new Shader("shaders/skybox.vs", "shaders/skybox.fs");
 	skybox_ptr = new Skybox(skybox_urls, *skybox_shader_ptr, *camera_ptr);
 
-	Model *world_model_ptr = new Model("resources/models/world", "world.obj");
+	Model *world_model_ptr = new Model("resources/models/world", "world.obj", false);
 	Shader *world_shader_ptr = new Shader("shaders/world.vs", "shaders/world.fs");
 	world_ptr = new World(*world_model_ptr, *world_shader_ptr, *camera_ptr);
 
-	Model *car_model_ptr = new Model("resources/models/car", "tank_tigher.obj");
+	Model *car_model_ptr = new Model("resources/models/car", "tank_tigher.obj", true);
 	Shader *car_shader_ptr = new Shader("shaders/car.vs", "shaders/car.fs");
-	car_ptr = new Car(*car_model_ptr, *car_shader_ptr, *camera_ptr, vec3(4, 19, 0.5));
+	car_ptr = new Car(*car_model_ptr, *car_shader_ptr, *camera_ptr, vec3(8.31, 8.01, 4.84));
 
 	while (!glfwWindowShouldClose(window)) {
 		ProcessInput(window);
