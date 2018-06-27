@@ -175,6 +175,11 @@ void Application::Run() {
 		glClearColor(0, 0, 0, 0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		shadow_ptr->SetShaders({
+			&car_ptr->shader(),
+			&world_ptr->shader()
+		});
+
 		skybox_ptr->Draw();
 		world_ptr->Draw();
 		car_ptr->Draw();

@@ -28,9 +28,14 @@ public:
 	void CameraAccompany();
 	void Rotate(double delta_alpha);
 	const Model &model() const;
+	const Shader &shader() const;
 	void Enable();
 	void Disable();
 };
+
+const Shader &Car::shader() const {
+	return shader_;
+}
 
 const Model &Car::model() const {
 	return model_;
@@ -74,7 +79,7 @@ void Car::Draw() const {
 	shader_.SetUniform<vec3>("view_position", camera_.position());
 	shader_.SetUniform<float>("material.shininess", 32);
 
-	model_.Draw(shader_);
+	model_.Draw(shader_, true);
 }
 
 void Car::CameraAccompany() {

@@ -25,7 +25,7 @@ class Mesh {
 public:
 	Mesh() = delete;
 	Mesh(std::vector<Vertex> vertices, std::vector<uint32_t> indices, std::vector<Texture> textures);
-	void Draw(Shader shader) const;
+	void Draw(Shader shader, bool with_textures) const;
 	const std::vector<Vertex> & GetVertices() const;
 
 private:
@@ -72,28 +72,30 @@ void Mesh::InitMesh() {
 	glBindVertexArray(0);
 }
 
-void Mesh::Draw(Shader shader) const {
+void Mesh::Draw(Shader shader, bool with_textures) const {
 	using namespace std;
-	uint32_t diffuse_total = 0, specular_total = 0, normals_total = 0, ambient_total = 0;
-	for (int i = 0; i < textures.size(); i++) {
-		glActiveTexture(GL_TEXTURE0 + i);
-		glBindTexture(GL_TEXTURE_2D, textures[i].id);
-		string identifier;
-		switch (textures[i].type) {
-			case TextureType::DIFFUSE:
-				identifier = "material.texture_diffuse_" + to_string(diffuse_total++);
-				break;
-			case TextureType::SPECULAR:
-				identifier = "material.texture_specular_" + to_string(specular_total++);
-				break;
-			case TextureType::NORMALS:
-				identifier = "material.texture_normals_" + to_string(normals_total++);
-				break;
-			case TextureType::AMBIENT:
-				identifier = "material.texture_ambient_" + to_string(ambient_total++);
-				break;
+	if (with_textures) {
+		uint32_t diffuse_total = 0, specular_total = 0, normals_total = 0, ambient_total = 0;
+		for (int i = 0; i < textures.size(); i++) {
+			glActiveTexture(GL_TEXTURE0 + i);
+			glBindTexture(GL_TEXTURE_2D, textures[i].id);
+			string identifier;
+			switch (textures[i].type) {
+				case TextureType::DIFFUSE:
+					identifier = "material.texture_diffuse_" + to_string(diffuse_total++);
+					break;
+				case TextureType::SPECULAR:
+					identifier = "material.texture_specular_" + to_string(specular_total++);
+					break;
+				case TextureType::NORMALS:
+					identifier = "material.texture_normals_" + to_string(normals_total++);
+					break;
+				case TextureType::AMBIENT:
+					identifier = "material.texture_ambient_" + to_string(ambient_total++);
+					break;
+			}
+			shader.SetUniform<int32_t>(identifier, i);
 		}
-		shader.SetUniform<int32_t>(identifier, i);
 	}
 
 	glBindVertexArray(vao);

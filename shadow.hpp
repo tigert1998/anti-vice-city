@@ -16,6 +16,7 @@ public:
 	Shadow(const Shader &shader, glm::mat4 view_projection_matrix);
 	void Render(std::vector<const Model *> model_ptrs, std::vector<glm::mat4> model_matrices) const;
 	uint32_t texture() const;
+	void SetShaders(std::vector<const Shader *> shader_ptrs) const;
 
 private:
 	const Shader &shader;
@@ -23,6 +24,14 @@ private:
 	glm::mat4 view_projection_matrix;
 
 };
+
+void Shadow::SetShaders(std::vector<const Shader *> shader_ptrs) const {
+	for (auto shader_ptr : shader_ptrs) {
+		shader_ptr->Use();
+		shader_ptr->SetUniform<int32_t>("shadow.texture", texture_);
+		shader_ptr->SetUniform<glm::mat4>("shadow.view_projection_matrix", view_projection_matrix);
+	}
+}
 
 Shadow::Shadow(const Shader &shader, glm::mat4 view_projection_matrix):
 	shader(shader),
@@ -43,7 +52,7 @@ void Shadow::Render(std::vector<const Model *> model_ptrs, std::vector<glm::mat4
 		auto model_ptr = model_ptrs[i];
 		auto model_matrix = model_matrices[i];
 		shader.SetUniform<glm::mat4>("model", model_matrix);
-		model_ptr->Draw(shader);
+		model_ptr->Draw(shader, false);
 	}
 	
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);

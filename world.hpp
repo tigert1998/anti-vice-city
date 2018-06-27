@@ -11,6 +11,7 @@ public:
 	void Draw() const;
 	glm::mat4 model_matrix() const;
 	const Model &model() const;
+	const Shader &shader() const;
 
 private:
 	const Model &model_;
@@ -20,6 +21,10 @@ private:
 
 const Model &World::model() const {
 	return model_;
+}
+
+const Shader &World::shader() const {
+	return shader_;
 }
 
 glm::mat4 World::model_matrix() const {
@@ -45,5 +50,5 @@ void World::Draw() const {
 	shader_.SetUniform<vec3>("light.specular", vec3(1, 1, 1));
 	shader_.SetUniform<vec3>("view_position", camera_.position());
 	shader_.SetUniform<float>("material.shininess", 32);
-	model_.Draw(shader_);	
+	model_.Draw(shader_, true);	
 }

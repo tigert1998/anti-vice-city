@@ -29,7 +29,7 @@ public:
 	Model() = delete;
 	Model(const std::string &, const std::string &, bool);
 
-	void Draw(Shader) const;
+	void Draw(Shader, bool with_textures) const;
 	const std::vector<Mesh> &meshes() const;
 	bool Conflict(const Model &model, glm::mat4 a_model_matrix, glm::mat4 b_model_matrix) const;
 };
@@ -63,15 +63,17 @@ Model::Model(const std::string &path, const std::string &file, bool single_bound
 	DFSNode(scene->mRootNode, scene);
 }
 
-void Model::Draw(Shader shader) const {
+void Model::Draw(Shader shader, bool with_textures) const {
 	for (const Mesh &i : meshes_)
-		i.Draw(shader);
-
+		i.Draw(shader, with_textures);
+	
+	if (with_textures) {
 #ifdef DEBUG
-	for (const BoundingBox & box : boxes_) {
-		box.Draw();
-	}
+		for (const BoundingBox & box : boxes_) {
+			box.Draw();
+		}
 #endif
+	}
 }
 
 void Model::DFSNode(aiNode *node, const aiScene *scene) {
