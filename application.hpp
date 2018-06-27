@@ -97,6 +97,12 @@ void Application::ProcessInput(GLFWwindow *window) {
        	shared.car_ptr->Move(MoveDirectionType::LEFT, delta_time);
     if (keys_pressed[GLFW_KEY_D])
        	shared.car_ptr->Move(MoveDirectionType::RIGHT, delta_time);
+
+#ifdef DEBUG
+	if (keys_pressed[GLFW_KEY_SPACE]) {
+		shared.car_ptr->ShowPosition();
+	}
+#endif
 }
 
 Application::Application() {
@@ -132,8 +138,10 @@ void Application::Run() {
 
 	Model *car_model_ptr = new Model("resources/models/car", "tank_tigher.obj", true);
 	Shader *car_shader_ptr = new Shader("shaders/car.vs", "shaders/car.fs");
-	car_ptr = new Car(*car_model_ptr, *car_shader_ptr, *camera_ptr, vec3(8.31, 8.01, 4.84));
+	car_ptr = new Car(*car_model_ptr, *car_shader_ptr, *camera_ptr, vec3(8.31, 8.01, 4.88));
+	// car_ptr = new Car(*car_model_ptr, *car_shader_ptr, *camera_ptr, vec3(8.31, 8.01, 3.18));
 
+	float last_time = 0.0f, current_time = 0.0f;
 	while (!glfwWindowShouldClose(window)) {
 		ProcessInput(window);
 
@@ -143,6 +151,12 @@ void Application::Run() {
 		skybox_ptr->Draw();
 		world_ptr->Draw();
 		car_ptr->Draw();
+
+		current_time = glfwGetTime();
+		float delta_time = current_time - last_time;
+		last_time = current_time;
+		car_ptr->Update(delta_time);
+
 
 		if (car_model_ptr->Conflict(*world_model_ptr, car_ptr->model_matrix(), world_ptr->model_matrix())) {
 			car_ptr->Disable();

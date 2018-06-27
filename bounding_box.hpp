@@ -23,6 +23,7 @@ private:
 
 public:
 	BoundingBox(const Mesh &mesh);
+	BoundingBox(const glm::vec3 &small, const glm::vec3 &big);
 	virtual ~BoundingBox();
 
 	bool InBox(glm::vec3 position) const;
@@ -62,6 +63,13 @@ bool BoundingBox::Conflict(const BoundingBox &box, glm::mat4 transform_from_b_to
 }
 
 BoundingBox::~BoundingBox()
+{
+	//
+}
+
+BoundingBox::BoundingBox(const glm::vec3 &small, const glm::vec3 &big):
+	small(small),
+	big(big)
 {
 	//
 }

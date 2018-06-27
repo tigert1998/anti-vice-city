@@ -3,6 +3,10 @@
 #include "model.hpp"
 #include "camera.hpp"
 
+#ifdef DEBUG
+#include <set>
+#endif
+
 #include <iostream>
 
 class Car {
@@ -15,8 +19,15 @@ private:
 	Camera &camera_;
 	glm::vec3 position_;
 
+#ifdef DEBUG
+	std::set< std::pair< std::pair<float, float>, std::pair<float, float> > > boxes_;
+#endif
+
 	double alpha_;
 	bool motion_;
+	float z_velocity_;
+	bool fall_;
+	const float gravity_ = 1.0f;
 
 public:
 	Car() = delete;
@@ -29,6 +40,15 @@ public:
 	void Rotate(double delta_alpha);
 	void Enable();
 	void Disable();
+
+
+	void Update(float time);
+	// void ResetVelocity();
+	void ConflictZ();
+
+#ifdef DEBUG
+	void ShowPosition();
+#endif
 };
 
 glm::mat4 Car::model_matrix() const {
@@ -45,7 +65,9 @@ glm::mat4 Car::model_matrix() const {
 }
 
 Car::Car(const Model &model, const Shader &shader, Camera &camera, glm::vec3 position):
+	fall_(true),
 	alpha_(0.0),
+	z_velocity_(0.0f),
 	motion_(true),
 	model_(model),
 	shader_(shader),
@@ -75,7 +97,7 @@ void Car::Draw() const {
 void Car::CameraAccompany() {
 	// double x = position_.x, y = position_.y, z = position_.z;
 	// camera_.set_position(position_ + glm::vec3(-0.2, 0, 0.1));
-	camera_.set_position(position_ - 0.1f * front_ + glm::vec3(0, 0, 0.1));
+	camera_.set_position(position_ - 0.3f * front_ + glm::vec3(0, 0, 0.1));
 	// camera_.set_position(position_ - 0.1f * front_);
 }
 
@@ -121,3 +143,57 @@ void Car::Disable()
 {
 	this->motion_ = false;
 }
+
+void Car::Update(float time)
+{
+	this->ConflictZ();
+	if (fall_) {
+		this->position_.z -= time * this->z_velocity_;
+		this->z_velocity_ += time * this->gravity_;
+
+		this->ConflictZ();
+
+		if (!fall_) {
+			this->position_.z += time * this->z_velocity_ - 0.01f;
+			this->z_velocity_ = 0.0f;
+		}
+	}
+}
+
+// void Car::ResetVelocity()
+// {
+// 	this->z_velocity_ = 0.0f;
+// }
+
+void Car::ConflictZ()
+{
+	using glm::vec3;
+
+	const BoundingBox boxes[] = {
+		BoundingBox(vec3(-8.9, -3, 4.5), vec3(-2, 9.6, 4.845)),
+		BoundingBox(vec3(-2.2, 0, 4.5), vec3(1.8, 12.25, 4.845)),
+		BoundingBox(vec3(-2.2, 12.3, 4.2), vec3(1.8, 13.6, 4.62)),
+		BoundingBox(vec3(-3.26, 13.7, 2.7), vec3(1.8, 21.9, 3.16))
+	};
+
+	glm::vec3 pos_rotate = glm::rotate(glm::mat4(1), (float)M_PI / 4, glm::vec3(0, 0, 1)) * glm::vec4(position_, 0.0f);
+	fall_ = true;
+	for (const auto & box: boxes) {
+		fall_ = fall_ &&  !box.InBox(pos_rotate);
+	}
+}
+
+#ifdef DEBUG
+void Car::ShowPosition()
+{
+// 	float px = position_.x;
+// 	float py = position_.y;
+
+// 	glm::vec3 after = glm::rotate(glm::mat4(1), (float)M_PI / 4, glm::vec3(0, 0, 1)) * glm::vec4(px, py, 0.0f, 0.0f);
+// 	px = after.x;
+// 	py = after.y;
+
+// 	std::cout << px << " " << py << std::endl;
+// 	std::cout << position_.x << " " << position_.y << " " << position_.z << std::endl;
+}
+#endif
