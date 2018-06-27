@@ -120,7 +120,6 @@ void Car::Move(MoveDirectionType direction, float time) {
 	CameraAccompany();
 
 	last_dir = direction;
-	cout << position_.x << ", " << position_.y << ", " << position_.z << endl;
 }
 
 void Car::Rotate(double delta_alpha) {

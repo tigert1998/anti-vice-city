@@ -102,6 +102,9 @@ uint32_t GenerateDepthTexture(int width, int height) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
+    static float border_color[] = {0.0, 0.0, 0.0, 1.0};
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color);
+
     glBindTexture(GL_TEXTURE_2D, 0);
     return texture;    
 }

@@ -7,6 +7,7 @@ layout (location = 2) in vec2 tex_coordinates;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
+uniform	mat4 view_projection_matrix;
 
 out vec3 Position;
 out vec3 Normal;
@@ -16,6 +17,6 @@ void main() {
 	gl_Position = projection * view * model * vec4(positions, 1);
 
 	Position = vec3(model * vec4(positions, 1.0f));;
-	Normal = normalize(mat3(transpose(inverse(model))) * normals);
+	Normal = normalize(transpose(inverse(mat3(model))) * normals);
 	TexCoord = tex_coordinates;
 }

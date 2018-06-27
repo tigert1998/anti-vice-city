@@ -59,12 +59,13 @@ Application Application::shared = Application();
 void Application::InitShadows() {
 	using namespace glm;
 	static Shader shadow_shader("shaders/shadow.vs", "shaders/shadow.fs");
-	static vec3 center_position = vec3(-3, 26.16, 4.9);
-	static vec3 light_position = vec3(-21.26, 11.47, 6.42);
-	static mat4 projection_matrix = ortho(0.0f, 2.55f, -4.7014f, 4.7014f, 1.0f, 20.0f);
+	static vec3 center_position = vec3(-3.22847, -12.8976, 26.4958);
+	static vec3 light_position = vec3(-3.22807, -13.7854, 26.9561);
+	static mat4 projection_matrix = ortho(-25.0f, 25.0f, -20.0f, 20.0f, 0.1f, 100.0f);
 	static mat4 view_matrix = lookAt(light_position, center_position, vec3(0, 0, 1));
-	
-	shadow_ptr = new Shadow(shadow_shader, view_matrix, projection_matrix);
+	static vec3 light_direction = center_position - light_position;
+
+	shadow_ptr = new Shadow(shadow_shader, projection_matrix * view_matrix, light_direction);
 }
 
 void Application::DisplayShadowTexture() {
@@ -98,7 +99,7 @@ void Application::DisplayShadowTexture() {
 		is_first_enter = false;
 	}
 
-	glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+	glViewport(0, 0, width, width);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, shadow_ptr->texture());
@@ -202,19 +203,19 @@ void Application::Run() {
 	using namespace std;
 
 	glClearColor(0, 0, 0, 0);
+
+	shadow_ptr->Render({
+		&world_ptr->model()
+	}, {
+		world_ptr->model_matrix()
+	});
+
+	glViewport(0, 0, width, height);
 	while (!glfwWindowShouldClose(window)) {
 		ProcessInput(window);
 
-		shadow_ptr->Render({
-			&car_ptr->model(), 
-			&world_ptr->model()
-		}, {
-			car_ptr->model_matrix(),
-			world_ptr->model_matrix()
-		});
-
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+		// DisplayShadowTexture();
 		shadow_ptr->SetShaders({
 			&car_ptr->shader(),
 			&world_ptr->shader()

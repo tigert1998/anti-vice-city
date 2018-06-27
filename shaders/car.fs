@@ -19,6 +19,7 @@ struct Light {
 struct Shadow {
 	sampler2D texture;
 	mat4 view_projection_matrix;
+	vec3 light_direction;
 };
 
 uniform Shadow shadow;
@@ -31,13 +32,32 @@ in vec3 Normal;
 in vec2 TexCoord;
 
 float CalcShadowCoefficient() {
-    vec4 light_space_position = shadow.view_projection_matrix * vec4(Position, 1);
-    light_space_position /= light_space_position.w;
-    float depth = light_space_position.z * 0.5 + 0.5;
-    float closest_depth = texture(shadow.texture, (vec2(light_space_position.xy) * 0.5 + 0.5)).r;
-    // float bias = max(0.05 * (1.0 - dot(normal, light_direction)), 0.005);
-    float bias = 0.005;
-    return depth - bias > closest_depth ? 0.0f : 1.0f;
+	vec4 fragPosLightSpace = shadow.view_projection_matrix * vec4(Position, 1);
+	vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+	projCoords = projCoords * 0.5 + 0.5;
+	float currentDepth = projCoords.z;
+	float closestDepth = texture(shadow.texture, projCoords.xy).r;
+
+	vec3 normal = normalize(Normal);
+	vec3 lightDir = normalize(shadow.light_direction);
+	float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
+	float result = 0.0;
+	vec2 texelSize = 1.0f / textureSize(shadow.texture, 0);
+
+	for(int x = -1; x <= 1; ++x)
+	{
+	    for(int y = -1; y <= 1; ++y)
+	    {
+	        float pcfDepth = texture(shadow.texture, projCoords.xy + vec2(x, y) * texelSize).r; 
+	        result += currentDepth - bias > pcfDepth  ? 1.0 : 0.0;        
+	    }    
+	}
+	result /= 9.0;
+    
+	if(projCoords.z > 1.0)
+	    result = 0.0;
+	    
+	return 1 - result;
 }
 
 void main() {

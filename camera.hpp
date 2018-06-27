@@ -19,6 +19,7 @@ public:
 	glm::mat4 GetViewMatrix() const;
 	void set_width_height_ratio(double width_height_ratio);
 	glm::mat4 GetProjectionMatrix() const;
+	glm::vec3 look() const;
 
 private:
 	const glm::vec3 up_ = glm::vec3(0, 0, 1);
@@ -28,9 +29,14 @@ private:
 
 };
 
+glm::vec3 Camera::look() const {
+	return position_ + front();
+}
+
 glm::mat4 Camera::GetProjectionMatrix() const {
 	using namespace glm;
 	return perspective(radians(45.0f), 1.0f * (float) width_height_ratio_, 0.1f, 1000.0f);
+	// return ortho(-25.0f, 25.0f, -20.0f, 20.0f, 0.1f, 200.0f);
 }
 
 void Camera::set_width_height_ratio(double width_height_ratio) {
@@ -83,5 +89,5 @@ void Camera::Move(MoveDirectionType direction, float time) {
 }
 
 glm::mat4 Camera::GetViewMatrix() const {
-	return glm::lookAt(position_, position_ + front(), up_);
+	return glm::lookAt(position_, look(), up_);
 }
