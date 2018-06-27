@@ -37,7 +37,7 @@ float CalcShadowCoefficient() {
     float closest_depth = texture(shadow.texture, (vec2(light_space_position.xy) * 0.5 + 0.5)).r;
     // float bias = max(0.05 * (1.0 - dot(normal, light_direction)), 0.005);
     float bias = 0.005;
-    return depth - bias > closest_depth ? 1.0f : 0.0f;
+    return depth - bias > closest_depth ? 0.0f : 1.0f;
 }
 
 void main() {

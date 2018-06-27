@@ -43,7 +43,7 @@ private:
 	static void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mode);
 
 	void InitShadows();
-	void RenderShadowTexture();
+	void DisplayShadowTexture();
 
 public:
 	static Application shared;
@@ -60,17 +60,53 @@ void Application::InitShadows() {
 	using namespace glm;
 	static Shader shadow_shader("shaders/shadow.vs", "shaders/shadow.fs");
 	static vec3 center_position = vec3(-3, 26.16, 4.9);
-	static vec3 light_position = vec3(-21.26, 11.47, 7);
-	static mat4 projection_matrix = ortho(-10.0f, 10.0f, -10.0f, 10.0f, 1.0f, 7.5f);
+	static vec3 light_position = vec3(-21.26, 11.47, 6.42);
+	static mat4 projection_matrix = ortho(0.0f, 2.55f, -4.7014f, 4.7014f, 1.0f, 20.0f);
 	static mat4 view_matrix = lookAt(light_position, center_position, vec3(0, 0, 1));
-	static mat4 view_projection_matrix = projection_matrix * view_matrix;
 	
-	shadow_ptr = new Shadow(shadow_shader, view_projection_matrix);
+	shadow_ptr = new Shadow(shadow_shader, view_matrix, projection_matrix);
 }
 
-void Application::RenderShadowTexture() {
+void Application::DisplayShadowTexture() {
 	using namespace glm;
+	using namespace std;
+	static bool is_first_enter = true;
+	static uint32_t vao, vbo;
+	static vector<float> quad_vertices = {
+		// Positions   Texture Coords
+		-1, 1.0f, 0.0f,  0.0f, 1.0f,
+		-1, -1, 0.0f, 0.0f, 0.0f,
+		1.0f, 1.0f, 0.0f, 1.0f, 1.0f,
+		1.0f, -1, 0.0f, 1.0f, 0.0f
+	};
+	static Shader test_shadow_shader("shaders/test_shadow.vs", "shaders/test_shadow.fs");
 
+	if (is_first_enter) {
+		glGenVertexArrays(1, &vao);
+		glGenBuffers(1, &vbo);
+
+		glBindVertexArray(vao);
+		glBindBuffer(GL_ARRAY_BUFFER, vbo);
+		glBufferData(GL_ARRAY_BUFFER, quad_vertices.size() * sizeof(float), quad_vertices.data(), GL_STATIC_DRAW);
+
+		glEnableVertexAttribArray(0);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(0, 3, GL_FLOAT, false, 5 * sizeof(float), (void *) 0);
+		glVertexAttribPointer(1, 2, GL_FLOAT, false, 5 * sizeof(float), (void *) (3 * sizeof(float)));
+		glBindVertexArray(0);
+
+		is_first_enter = false;
+	}
+
+	glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, shadow_ptr->texture());
+	test_shadow_shader.Use();
+	test_shadow_shader.SetUniform<int32_t>("shadow_texture", 0); 
+	glBindVertexArray(vao);
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+	glBindVertexArray(0);
 }
 
 void Application::CursorPosCallback(GLFWwindow *window, double x, double y) {
@@ -115,6 +151,10 @@ void Application::ProcessInput(GLFWwindow *window) {
        	shared.car_ptr->Move(MoveDirectionType::LEFT, delta_time);
     if (keys_pressed[GLFW_KEY_D])
        	shared.car_ptr->Move(MoveDirectionType::RIGHT, delta_time);
+    if (keys_pressed[GLFW_KEY_J])
+       	shared.car_ptr->Move(MoveDirectionType::DOWN, delta_time);
+    if (keys_pressed[GLFW_KEY_K])
+       	shared.car_ptr->Move(MoveDirectionType::UP, delta_time);
 }
 
 Application::Application() {
@@ -161,6 +201,7 @@ void Application::Run() {
 	using namespace glm;
 	using namespace std;
 
+	glClearColor(0, 0, 0, 0);
 	while (!glfwWindowShouldClose(window)) {
 		ProcessInput(window);
 
@@ -172,7 +213,6 @@ void Application::Run() {
 			world_ptr->model_matrix()
 		});
 
-		glClearColor(0, 0, 0, 0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		shadow_ptr->SetShaders({

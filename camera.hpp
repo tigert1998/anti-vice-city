@@ -5,7 +5,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 enum class MoveDirectionType {
-	FRONT, BACK, LEFT, RIGHT
+	FRONT, BACK, LEFT, RIGHT, UP, DOWN
 };
 
 class Camera {

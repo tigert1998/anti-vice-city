@@ -8,7 +8,6 @@
 class Car {
 private:
 	const glm::vec3 up_ = glm::vec3(0, 0, 1);
-	// const glm::vec3 front_ = glm::vec3(1, 0, 0);
 	glm::vec3 front_;
 	const Model &model_;
 	const Shader &shader_;
@@ -110,6 +109,12 @@ void Car::Move(MoveDirectionType direction, float time) {
 			break;
 		case MoveDirectionType::RIGHT:
 			position_ += right * time;
+			break;
+		case MoveDirectionType::UP:
+			position_ += up_ * time;
+			break;
+		case MoveDirectionType::DOWN:
+			position_ -= up_ * time;
 			break;
 	}
 	CameraAccompany();
