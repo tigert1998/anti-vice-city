@@ -2,9 +2,8 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 
-#include <GL/gl.h>
-#include <GL/glu.h>
 
+#include <glad/glad.h>
 #include <string>
 #include <map>
 #include <iostream>

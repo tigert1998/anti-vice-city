@@ -4,8 +4,7 @@
 
 #define DEBUG
 
-#include <GL/gl.h>
-#include <GL/glext.h>
+#include <glad/glad.h>
 #include <string>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
